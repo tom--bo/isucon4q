@@ -8,6 +8,7 @@ import (
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/sessions"
 	"net/http"
+	_ "net/http/pprof"
 	"strconv"
 )
 
@@ -56,6 +57,10 @@ func main() {
 	m.Use(render.Renderer(render.Options{
 		Layout: "layout",
 	}))
+
+	go func() {
+		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
+	}()
 
 	m.Get("/", func(r render.Render, session sessions.Session) {
 		r.HTML(200, "index", map[string]string{"Flash": getFlash(session, "notice")})

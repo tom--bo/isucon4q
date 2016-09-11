@@ -7,7 +7,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/sessions"
+	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"strconv"
 )
 
@@ -19,11 +21,12 @@ var (
 
 func init() {
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
+		//"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
+		"%s:%s@unix(/var/lib/mysql/mysql.sock)/%s?parseTime=true&loc=Local",
 		getEnv("ISU4_DB_USER", "root"),
 		getEnv("ISU4_DB_PASSWORD", ""),
-		getEnv("ISU4_DB_HOST", "localhost"),
-		getEnv("ISU4_DB_PORT", "3306"),
+		//getEnv("ISU4_DB_HOST", "localhost"),
+		//getEnv("ISU4_DB_PORT", "3306"),
 		getEnv("ISU4_DB_NAME", "isu4_qualifier"),
 	)
 
@@ -55,6 +58,10 @@ func main() {
 	m.Use(render.Renderer(render.Options{
 		Layout: "layout",
 	}))
+
+	go func() {
+		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
+	}()
 
 	m.Get("/", func(r render.Render, session sessions.Session) {
 		r.HTML(200, "index", map[string]string{"Flash": getFlash(session, "notice")})
